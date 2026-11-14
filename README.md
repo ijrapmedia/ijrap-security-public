@@ -35,7 +35,7 @@ This project relies exclusively on the **Python standard library**. No external 
 
 1. **Clone the repository** (or download and extract the ZIP archive):
    ```bash
-   git clone https://github/ijrapmedia/ijrap-security-public.git
+   git clone https://github.com/ijrapmedia/ijrap-security-public.git
    
    ```
 
