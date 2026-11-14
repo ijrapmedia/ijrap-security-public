@@ -1,7 +1,8 @@
 # IJRAP Security: Multi-Stream Forensic Truth-Preservation Core
 
 **Founding Author & Sovereign Copyright Holder:** ADZE Kossivi Edem (IJRAP LABS / IJRAP Media)  
-**Academic Reference:** Zenodo: https://zenodo.org/record/23139273 | **ORCID:**  https://orcid.org/0009-0009-0018-6734 
+**Academic Reference:** Zenodo: https://zenodo.org/record/23139273 |
+**ORCID:**  https://orcid.org/0009-0009-0018-6734 
 **Status:** Open-Source Public Reference Implementation (GNU AGPLv3)
 
 ---
@@ -34,7 +35,7 @@ This project relies exclusively on the **Python standard library**. No external 
 
 1. **Clone the repository** (or download and extract the ZIP archive):
    ```bash
-   https://github.com/ijrapmedia/ijrap-security-public
+   git clone https://github.com
    ```
 
 2. **Navigate to the project directory:**
