@@ -7,7 +7,7 @@ source.include_exts = py,png,jpg,kv,atlas,json,txt
 version = 1.0.0
 
 # Dépendances exactes pour Android
-requirements = python3,kivy==2.3.0,plyer,android
+requirements = python3,kivy==2.3.0,plyer
 
 orientation = portrait
 fullscreen = 0
