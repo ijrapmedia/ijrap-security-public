@@ -1,0 +1,28 @@
+name: Build IJRAP Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Compilation de l'APK avec Buildozer Action
+        id: buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer -v android debug
+          buildozer_version: master
+
+      - name: Sauvegarde de l'APK prêt à installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: IJRAP-Security-Public-APK
+          path: bin/*.apk
+          
