@@ -59,7 +59,26 @@ Launch the forensic sealer by running the main script with Python:
   ```bash
   python3 ijrap_public_sealer.py
   ```
+## Mobile App Prototype (Android / Kivy)
 
+In addition to the standalone Python CLI core (`ijrap_public_sealer.py`), this repository includes a lightweight **Kivy mobile prototype** (`main.py`) featuring:
+- **Duress & Decoy PIN Vault:** Operational protection against forced device unlocking (`1234` standard vault / `9999` decoy empty view).
+- **Chained Hash Timestamping & Post-Quantum Signatures:** Pure-Python `SHA3-512` + Lamport-OTS signing linked across sequential evidence bundles.
+- **Automated APK Pipeline:** Configured via `buildozer.spec` and GitHub Actions (`.github/workflows/main.yml`).
+
+To run the mobile UI locally on a desktop for testing:
+```bash
+pip install kivy==2.3.0
+python main.py
+```
+
+## Roadmap & Open Collaboration
+
+We welcome security engineers, mobile developers, and civic-tech contributors to open **Issues** or **Pull Requests** on the following milestones:
+- **ProofMode / Guardian Project Interoperability:** Bridging our 4-pillar investigation bundles (synchronized media + written narrative + witness consent) with `libProofMode` metadata and hardware-backed Android Keystore attestation.
+- **Native Hardware Bridge:** Replacing desktop simulation fallbacks with native Android camera, microphone, and GPS sensor streams.
+- **Post-Quantum Standardization:** Integrating NIST-standardized PQ signature schemes (ML-DSA / SLH-DSA) alongside our hash-based chaining.
+  
 ## License & Contact
 
 - **License:** Released under the **GNU AGPLv3** open-source license (an enterprise tier is also available for institutional clients).
