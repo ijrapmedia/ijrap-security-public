@@ -29,4 +29,4 @@ To help us reproduce and fix the issue quickly, please include:
 * **Acknowledgment:** We will acknowledge receipt of your report within **48 to 72 hours**.
 * **Updates:** We will keep you informed of our progress toward a fix at least once every **7 days**.
 * **Disclosure:** We follow a coordinated disclosure process. Once a patch is ready and released, we will publicly credit you for the discovery (unless you prefer to remain anonymous).
-* 
+  
