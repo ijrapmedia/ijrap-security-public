@@ -23,17 +23,9 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-from kivy.app import App
-from kivy.core.window import Window
-from kivy.lang import Builder
-from kivy.properties import BooleanProperty, StringProperty
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
-from kivy.uix.screenmanager import Screen
-
 
 class PostQuantumLamportSigner:
-    """Signature Post-Quantique basée sur le hachage (Lamport-SHA3-512) 100% Python pur."""
+    """Hash-based Post-Quantum Signature (Lamport-SHA3-512) in 100% pure Python."""
 
     @staticmethod
     def sign_digest(digest_bytes: bytes) -> dict:
@@ -61,8 +53,8 @@ class PostQuantumLamportSigner:
 
 class IJRAPForensicSealer:
     """
-    IJRAP Security - Moteur de scellement adapté au Sandboxing Mobile (Android / iOS).
-    Toutes les opérations d'assemblage et de chiffrement s'exécutent en mémoire vive (RAM).
+    IJRAP Security - Forensic Sealing Engine designed for Mobile Sandboxing (Android / iOS).
+    All archive assembly and encryption operations run strictly in volatile memory (RAM).
     """
 
     def __init__(
@@ -79,7 +71,7 @@ class IJRAPForensicSealer:
         self._private_key, self.public_key_hex = self._load_or_create_device_keys(key_passphrase)
 
     def _load_or_create_device_keys(self, passphrase: str) -> tuple[ed25519.Ed25519PrivateKey, str]:
-        """Génère ou charge la clé Ed25519 chiffrée par mot de passe (compatible Sandbox)."""
+        """Generates or loads the password-encrypted Ed25519 key pair (Sandbox compatible)."""
         priv_path = os.path.join(self.key_storage_dir, f"{self.investigator_id}_ed25519.pem")
         pwd_bytes = passphrase.encode("utf-8")
 
@@ -157,7 +149,7 @@ class IJRAPForensicSealer:
         return output.getvalue().encode("utf-8")
 
     def _request_opentimestamp(self, bundle_id: str, block_sha256_hex: str) -> str | None:
-        """Ancre l'empreinte du bloc dans la blockchain Bitcoin via OpenTimestamps."""
+        """Anchors the monolithic block digest into the Bitcoin blockchain via OpenTimestamps."""
         digest_bytes = bytes.fromhex(block_sha256_hex)
         calendar_url = "https://opentimestamps.org"
         ots_path = os.path.join(self.storage_dir, f"{bundle_id}.ijrap.ots")
@@ -178,7 +170,7 @@ class IJRAPForensicSealer:
         return None
 
     def panic_wipe(self) -> bool:
-        """Suppression de la clé privée locale du bac à sable."""
+        """Deletes the local private key from the application sandbox."""
         priv_path = os.path.join(self.key_storage_dir, f"{self.investigator_id}_ed25519.pem")
         if os.path.exists(priv_path):
             os.remove(priv_path)
@@ -196,8 +188,8 @@ class IJRAPForensicSealer:
         enable_opentimestamps: bool = True,
     ) -> dict:
         """
-        Assemble, signe (Ed25519 + Lamport PQC) et chiffre le bloc directement en RAM.
-        Aucune donnée en clair n'est écrite sur le stockage flash du téléphone.
+        Assembles, signs (Ed25519 + Lamport PQC), and encrypts the bundle directly in RAM.
+        No plaintext data is ever written to the device flash storage.
         """
         bundle_id = f"IJRAP_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid.uuid4().hex[:8]}"
         sync_timestamp = datetime.now(timezone.utc).isoformat()
@@ -245,7 +237,7 @@ class IJRAPForensicSealer:
             hashed_streams, gps_coords, sync_timestamp
         )
 
-        # Assemblage du bloc TAR intégralement en mémoire vive (RAM)
+        # Assemble the TAR block entirely in volatile memory (RAM)
         ram_tar_buffer = io.BytesIO()
         with tarfile.open(fileobj=ram_tar_buffer, mode="w") as tar:
             for name, content in [
@@ -266,62 +258,79 @@ class IJRAPForensicSealer:
 
         plaintext_block_bytes = ram_tar_buffer.getvalue()
 
-        # Empreintes et signatures (Classique + Post-Quantique)
-        block_sha256 = hashlib.sha256(plaintext_block_bytes).hexdigest()
-        block_sha3_512_digest = hashlib.sha3_512(plaintext_block_bytes).digest()
-        block_sha3_512_hex = block_sha3_512_digest.hex()
+# Digests and Signatures (Classical + Post-Quantum)
+block_sha256 = hashlib.sha256(plaintext_block_bytes).hexdigest()
+block_sha3_512_digest = hashlib.sha3_512(plaintext_block_bytes).digest()
+block_sha3_512_hex = block_sha3_512_digest.hex()
+ed25519_sig = self.sign_digest(block_sha3_512_hex)
+pqc_sig = PostQuantumLamportSigner.sign_digest(block_sha3_512_digest)
+# Encrypt in RAM before writing to device storage
+kdf_salt = os.urandom(16)
+if encryption_passphrase:
+key = self._derive_fernet_key(encryption_passphrase, kdf_salt)
+cipher = Fernet(key)
+bytes_to_write = cipher.encrypt(plaintext_block_bytes)
+block_filename = f"{bundle_id}.ijrap.enc"
+else:
+bytes_to_write = plaintext_block_bytes
+block_filename = f"{bundle_id}.ijrap"
+final_block_path = os.path.join(self.storage_dir, block_filename)
+with open(final_block_path, "wb") as bf:
+bf.write(bytes_to_write)
+bf.flush()
+# External OpenTimestamps anchoring
+ots_path = None
+if enable_opentimestamps:
+ots_path = self._request_opentimestamp(bundle_id, block_sha256)
+# Chained public certificate (replaces Unix os.chmod permissions)
+certificate = {
+"schema": "IJRAP-SANDBOX-CERT-v3",
+"bundle_id": bundle_id,
+"title": title,
+"timestamp_utc": sync_timestamp,
+"previous_chain_hash": previous_chain_hash,
+"monolithic_block_file": block_filename,
+"block_sha256": block_sha256,
+"sha3_512_digest": block_sha3_512_hex,
+"device_public_key_hex": self.public_key_hex,
+"ed25519_block_signature_hex": ed25519_sig,
+"post_quantum_signature": pqc_sig,
+"opentimestamps_proof": os.path.basename(ots_path) if ots_path else "pending_offline",
+"encryption": {
+"is_encrypted": bool(encryption_passphrase),
+"cipher": "Fernet-AES128-CBC-HMAC-SHA256" if encryption_passphrase else "none",
+"kdf_salt_hex": kdf_salt.hex() if encryption_passphrase else None,
+},
+}
+cert_path = os.path.join(self.storage_dir, f"{bundle_id}.json")
+with open(cert_path, "w", encoding="utf-8") as cf:
+json.dump(certificate, cf, indent=2, ensure_ascii=False)
+cf.flush()
+return certificate
 
-        ed25519_sig = self.sign_digest(block_sha3_512_hex)
-        pqc_sig = PostQuantumLamportSigner.sign_digest(block_sha3_512_digest)
+---
 
-        # Chiffrement en RAM avant toute écriture sur le stockage du téléphone
-        kdf_salt = os.urandom(16)
-        if encryption_passphrase:
-            key = self._derive_fernet_key(encryption_passphrase, kdf_salt)
-            cipher = Fernet(key)
-            bytes_to_write = cipher.encrypt(plaintext_block_bytes)
-            block_filename = f"{bundle_id}.ijrap.enc"
-        else:
-            bytes_to_write = plaintext_block_bytes
-            block_filename = f"{bundle_id}.ijrap"
+### 2. `main.py` (English only - Copy & Paste)
 
-        final_block_path = os.path.join(self.storage_dir, block_filename)
-        with open(final_block_path, "wb") as bf:
-            bf.write(bytes_to_write)
-            bf.flush()
+```python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (C) 2026 ADZE Kossivi Edem (IJRAP Media / IJRAP LABS)
 
-        # Horodatage externe OpenTimestamps
-        ots_path = None
-        if enable_opentimestamps:
-            ots_path = self._request_opentimestamp(bundle_id, block_sha256)
+import hashlib
+import json
+import os
 
-        # Certificat public chaîné (remplace les permissions Unix os.chmod)
-        certificate = {
-            "schema": "IJRAP-SANDBOX-CERT-v3",
-            "bundle_id": bundle_id,
-            "title": title,
-            "timestamp_utc": sync_timestamp,
-            "previous_chain_hash": previous_chain_hash,
-            "monolithic_block_file": block_filename,
-            "block_sha256": block_sha256,
-            "sha3_512_digest": block_sha3_512_hex,
-            "device_public_key_hex": self.public_key_hex,
-            "ed25519_block_signature_hex": ed25519_sig,
-            "post_quantum_signature": pqc_sig,
-            "opentimestamps_proof": os.path.basename(ots_path) if ots_path else "pending_offline",
-            "encryption": {
-                "is_encrypted": bool(encryption_passphrase),
-                "cipher": "Fernet-AES128-CBC-HMAC-SHA256" if encryption_passphrase else "none",
-                "kdf_salt_hex": kdf_salt.hex() if encryption_passphrase else None,
-            },
-        }
+from kivy.app import App
+from kivy.core.window import Window
+from kivy.lang import Builder
+from kivy.properties import BooleanProperty, StringProperty
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
+from kivy.uix.screenmanager import Screen
 
-        cert_path = os.path.join(self.storage_dir, f"{bundle_id}.json")
-        with open(cert_path, "w", encoding="utf-8") as cf:
-            json.dump(certificate, cf, indent=2, ensure_ascii=False)
-            cf.flush()
-
-        return certificate
+from ijrap_sealer import IJRAPForensicSealer
 
 
 Window.clearcolor = (0.07, 0.08, 0.10, 1)
@@ -336,6 +345,12 @@ KV_UI = """
 <AccentButton@Button>:
     background_normal: ''
     background_color: 0.08, 0.55, 0.35, 1
+    color: 1, 1, 1, 1
+    bold: True
+
+<DangerButton@Button>:
+    background_normal: ''
+    background_color: 0.65, 0.15, 0.15, 1
     color: 1, 1, 1, 1
     bold: True
 
@@ -363,7 +378,7 @@ ScreenManager:
             size_hint_y: 0.12
         Label:
             id: pin_hint
-            text: 'Entrez votre code PIN de session'
+            text: 'Enter your session PIN'
             font_size: '13sp'
             color: 0.65, 0.70, 0.78, 1
             size_hint_y: 0.08
@@ -415,30 +430,39 @@ ScreenManager:
         orientation: 'vertical'
         padding: '18dp'
         spacing: '10dp'
-        Label:
-            text: 'SCELLEMENT EN MÉMOIRE (PQC + AES + CHAÎNAGE)'
-            bold: True
-            color: 0.20, 0.78, 0.55, 1
+        BoxLayout:
+            orientation: 'horizontal'
             size_hint_y: None
-            height: '30dp'
+            height: '34dp'
+            Label:
+                text: 'IN-MEMORY SEALING (PQC + AES)'
+                bold: True
+                color: 0.20, 0.78, 0.55, 1
+                halign: 'left'
+                text_size: self.size
+            DangerButton:
+                text: 'PANIC WIPE'
+                size_hint_x: 0.35
+                font_size: '12sp'
+                on_press: root.trigger_panic_wipe()
         TextInput:
             id: title_input
-            hint_text: "Titre de l'observation ou preuve"
+            hint_text: 'Observation or evidence title'
             multiline: False
             size_hint_y: None
             height: '44dp'
         TextInput:
             id: note_input
-            hint_text: 'Description factuelle à chiffrer et signer...'
+            hint_text: 'Factual description to encrypt and sign...'
             multiline: True
             size_hint_y: 0.35
         AccentButton:
-            text: 'SCELLER ET CHIFFRER (RAM -> COFFRE)'
+            text: 'SEAL & ENCRYPT (RAM -> VAULT)'
             size_hint_y: None
             height: '48dp'
             on_press: root.seal_note()
         Label:
-            text: 'Certificats chaînés dans le bac à sable :'
+            text: 'Chained certificates inside sandbox:'
             bold: True
             size_hint_y: None
             height: '26dp'
@@ -447,7 +471,7 @@ ScreenManager:
         ScrollView:
             Label:
                 id: list_label
-                text: 'Aucun dossier scellé.'
+                text: 'No sealed records found.'
                 size_hint_y: None
                 height: self.texture_size[1]
                 text_size: self.width, None
@@ -458,7 +482,7 @@ ScreenManager:
 class SecurityScreen(Screen):
     entered_pin = StringProperty("")
 
-    # Empreintes SHA-256 des codes PIN (évite les mots de passe en clair dans le code)
+    # Salted SHA-256 PIN hashes (1234 = normal mode, 9999 = duress mode)
     NORMAL_PIN_HASH = hashlib.sha256(b"IJRAP_SALT_2026:1234").hexdigest()
     DURESS_PIN_HASH = hashlib.sha256(b"IJRAP_SALT_2026:9999").hexdigest()
 
@@ -477,7 +501,9 @@ class SecurityScreen(Screen):
 
     def verify_pin(self):
         app = App.get_running_app()
-        candidate_hash = hashlib.sha256(f"IJRAP_SALT_2026:{self.entered_pin}".encode("utf-8")).hexdigest()
+        candidate_hash = hashlib.sha256(
+            f"IJRAP_SALT_2026:{self.entered_pin}".encode("utf-8")
+        ).hexdigest()
 
         if candidate_hash == self.NORMAL_PIN_HASH:
             app.duress_mode = False
@@ -491,7 +517,7 @@ class SecurityScreen(Screen):
             self.manager.current = "vault"
             app.refresh_list()
         else:
-            self.ids.pin_hint.text = "PIN INCORRECT"
+            self.ids.pin_hint.text = "INCORRECT PIN"
             self.clear_pin()
 
 
@@ -503,12 +529,13 @@ class VaultScreen(Screen):
 
         if not title or not note:
             Popup(
-                title="Erreur",
-                content=Label(text="Remplissez le titre et le récit."),
+                title="Error",
+                content=Label(text="Please fill in both title and report."),
                 size_hint=(0.8, 0.3),
             ).open()
             return
 
+        # In duress mode, simulate saving without writing anything to disk
         if app.duress_mode or app.sealer is None:
             self.ids.title_input.text = ""
             self.ids.note_input.text = ""
@@ -528,7 +555,7 @@ class VaultScreen(Screen):
         app.refresh_list()
 
         Popup(
-            title="Scellé & Chiffré en RAM",
+            title="Sealed & Encrypted in RAM",
             content=Label(
                 text=(
                     f"UTC: {cert['timestamp_utc'][:19]}Z\n"
@@ -538,6 +565,20 @@ class VaultScreen(Screen):
                 halign="center",
             ),
             size_hint=(0.88, 0.38),
+        ).open()
+
+    def trigger_panic_wipe(self):
+        """Immediately wipes the local Ed25519 private key and locks the app."""
+        app = App.get_running_app()
+        if app.sealer:
+            app.sealer.panic_wipe()
+            app.sealer = None
+            app.session_secret = ""
+        self.manager.current = "login"
+        Popup(
+            title="Security Alert",
+            content=Label(text="Private key wiped from sandbox."),
+            size_hint=(0.8, 0.3),
         ).open()
 
 
@@ -551,6 +592,7 @@ class IJRAPSecurityApp(App):
         return Builder.load_string(KV_UI)
 
     def get_vault_dir(self) -> str:
+        """Uses strictly the internal directory permitted by the mobile Sandbox."""
         vault = os.path.join(self.user_data_dir, "ijrap_vault")
         os.makedirs(vault, exist_ok=True)
         return vault
@@ -563,23 +605,30 @@ class IJRAPSecurityApp(App):
             key_passphrase=self.session_secret,
         )
 
-def get_last_chain_hash(self) -> str:
-vault = self.get_vault_dir()
-files = sorted([f for f in os.listdir(vault) if f.endswith(".json")])
-if not files:
-return "0" * 128
-try:
-with open(os.path.join(vault, files[-1]), "r", encoding="utf-8") as f:
-last_data = json.load(f)
-return last_data.get("sha3_512_digest", "0" * 128)
-except Exception:
-return "0" * 128
-def refresh_list(self):
-screen = self.root.get_screen("vault")
-if self.duress_mode:
-screen.ids.list_label.text = "Aucun dossier scellé."
-return
-files = sorted([f for f in os.listdir(self.get_vault_dir()) if f.endswith(".json")])
-screen.ids.list_label.text = "\n".join(f"• {f}" for f in files) if files else "Aucun dossier scellé."
-if name == "main":
-IJRAPSecurityApp().run()
+    def get_last_chain_hash(self) -> str:
+        vault = self.get_vault_dir()
+        files = sorted([f for f in os.listdir(vault) if f.endswith(".json")])
+        if not files:
+            return "0" * 128
+        try:
+            with open(os.path.join(vault, files[-1]), "r", encoding="utf-8") as f:
+                last_data = json.load(f)
+                return last_data.get("sha3_512_digest", "0" * 128)
+        except Exception:
+            return "0" * 128
+
+    def refresh_list(self):
+        screen = self.root.get_screen("vault")
+        if self.duress_mode:
+            screen.ids.list_label.text = "No sealed records found."
+            return
+        files = sorted([f for f in os.listdir(self.get_vault_dir()) if f.endswith(".json")])
+        screen.ids.list_label.text = (
+            "\n".join(f"• {f}" for f in files) if files else "No sealed records found."
+        )
+
+
+if __name__ == "__main__":
+    IJRAPSecurityApp().run()
+Souhaitez-vous maintenant le fichier buildozer.spec (également en anglais) pour compiler votre application Android, ou un script de vérification pour déchiffrer et auditer les preuves .ijrap.enc ?
+                          
