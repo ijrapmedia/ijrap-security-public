@@ -15,8 +15,7 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 
-# Importation de votre moteur de scellement (fichier ijrap_sealer.py)
-from ijrap_sealer import IJRAPForensicSealer
+from ijrap_seal import IJRAPForensicSealer
 
 
 Window.clearcolor = (0.07, 0.08, 0.10, 1)
@@ -64,7 +63,7 @@ ScreenManager:
             size_hint_y: 0.12
         Label:
             id: pin_hint
-            text: 'Entrez votre code PIN de session'
+            text: 'Enter your session PIN'
             font_size: '13sp'
             color: 0.65, 0.70, 0.78, 1
             size_hint_y: 0.08
@@ -121,7 +120,7 @@ ScreenManager:
             size_hint_y: None
             height: '34dp'
             Label:
-                text: 'SCELLEMENT MÉMOIRE (PQC + AES)'
+                text: 'IN-MEMORY SEALING (PQC + AES)'
                 bold: True
                 color: 0.20, 0.78, 0.55, 1
                 halign: 'left'
@@ -133,22 +132,22 @@ ScreenManager:
                 on_press: root.trigger_panic_wipe()
         TextInput:
             id: title_input
-            hint_text: "Titre de l'observation ou preuve"
+            hint_text: 'Observation or evidence title'
             multiline: False
             size_hint_y: None
             height: '44dp'
         TextInput:
             id: note_input
-            hint_text: 'Description factuelle à chiffrer et signer...'
+            hint_text: 'Factual description to encrypt and sign...'
             multiline: True
             size_hint_y: 0.35
         AccentButton:
-            text: 'SCELLER ET CHIFFRER (RAM -> COFFRE)'
+            text: 'SEAL & ENCRYPT (RAM -> VAULT)'
             size_hint_y: None
             height: '48dp'
             on_press: root.seal_note()
         Label:
-            text: 'Certificats chaînés dans le bac à sable :'
+            text: 'Chained certificates inside sandbox:'
             bold: True
             size_hint_y: None
             height: '26dp'
@@ -157,7 +156,7 @@ ScreenManager:
         ScrollView:
             Label:
                 id: list_label
-                text: 'Aucun dossier scellé.'
+                text: 'No sealed records found.'
                 size_hint_y: None
                 height: self.texture_size[1]
                 text_size: self.width, None
@@ -168,7 +167,7 @@ ScreenManager:
 class SecurityScreen(Screen):
     entered_pin = StringProperty("")
 
-    # Empreintes SHA-256 salées des codes PIN (1234 = normal, 9999 = leurre)
+    # Salted SHA-256 PIN hashes (1234 = normal mode, 9999 = duress mode)
     NORMAL_PIN_HASH = hashlib.sha256(b"IJRAP_SALT_2026:1234").hexdigest()
     DURESS_PIN_HASH = hashlib.sha256(b"IJRAP_SALT_2026:9999").hexdigest()
 
@@ -203,7 +202,7 @@ class SecurityScreen(Screen):
             self.manager.current = "vault"
             app.refresh_list()
         else:
-            self.ids.pin_hint.text = "PIN INCORRECT"
+            self.ids.pin_hint.text = "INCORRECT PIN"
             self.clear_pin()
 
 
@@ -215,13 +214,13 @@ class VaultScreen(Screen):
 
         if not title or not note:
             Popup(
-                title="Erreur",
-                content=Label(text="Remplissez le titre et le récit."),
+                title="Error",
+                content=Label(text="Please fill in both title and report."),
                 size_hint=(0.8, 0.3),
             ).open()
             return
 
-        # En mode leurre, l'interface simule l'enregistrement sans rien écrire
+        # In duress mode, simulate saving without writing anything to disk
         if app.duress_mode or app.sealer is None:
             self.ids.title_input.text = ""
             self.ids.note_input.text = ""
@@ -241,7 +240,7 @@ class VaultScreen(Screen):
         app.refresh_list()
 
         Popup(
-            title="Scellé & Chiffré en RAM",
+            title="Sealed & Encrypted in RAM",
             content=Label(
                 text=(
                     f"UTC: {cert['timestamp_utc'][:19]}Z\n"
@@ -254,7 +253,7 @@ class VaultScreen(Screen):
         ).open()
 
     def trigger_panic_wipe(self):
-        """Efface immédiatement la clé privée Ed25519 locale et verrouille l'application."""
+        """Immediately wipes the local Ed25519 private key and locks the app."""
         app = App.get_running_app()
         if app.sealer:
             app.sealer.panic_wipe()
@@ -262,8 +261,8 @@ class VaultScreen(Screen):
             app.session_secret = ""
         self.manager.current = "login"
         Popup(
-            title="Alerte Sécurité",
-            content=Label(text="Clé privée effacée du bac à sable."),
+            title="Security Alert",
+            content=Label(text="Private key wiped from sandbox."),
             size_hint=(0.8, 0.3),
         ).open()
 
@@ -278,7 +277,7 @@ class IJRAPSecurityApp(App):
         return Builder.load_string(KV_UI)
 
     def get_vault_dir(self) -> str:
-        """Utilise uniquement le répertoire interne autorisé par le Sandbox mobile."""
+        """Uses strictly the internal directory permitted by the mobile Sandbox."""
         vault = os.path.join(self.user_data_dir, "ijrap_vault")
         os.makedirs(vault, exist_ok=True)
         return vault
@@ -306,11 +305,11 @@ class IJRAPSecurityApp(App):
     def refresh_list(self):
         screen = self.root.get_screen("vault")
         if self.duress_mode:
-            screen.ids.list_label.text = "Aucun dossier scellé."
+            screen.ids.list_label.text = "No sealed records found."
             return
         files = sorted([f for f in os.listdir(self.get_vault_dir()) if f.endswith(".json")])
         screen.ids.list_label.text = (
-            "\n".join(f"• {f}" for f in files) if files else "Aucun dossier scellé."
+            "\n".join(f"• {f}" for f in files) if files else "No sealed records found."
         )
 
 
