@@ -7,7 +7,7 @@ source.dir = .
 source.include_exts = py,png,jpg,kv,json,txt,csv,enc,ots
 version = 1.0.0
 
-requirements = python3,kivy==2.3.0,cryptography
+requirements = python3,kivy==2.3.0,openssl,cffi,cryptography
 
 orientation = portrait
 fullscreen = 0
@@ -24,5 +24,3 @@ android.accept_sdk_license = True
 
 log_level = 2
 warn_on_root = 1
-
-
