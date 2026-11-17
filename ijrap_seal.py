@@ -257,57 +257,60 @@ class IJRAPForensicSealer:
                 tar.addfile(info, io.BytesIO(raw_bytes))
 
         plaintext_block_bytes = ram_tar_buffer.getvalue()
+        block_sha256 = hashlib.sha256(plaintext_block_bytes).hexdigest()
+        block_sha3_512_digest = hashlib.sha3_512(plaintext_block_bytes).digest()
+        block_sha3_512_hex = block_sha3_512_digest.hex()
 
-# Digests and Signatures (Classical + Post-Quantum)
-block_sha256 = hashlib.sha256(plaintext_block_bytes).hexdigest()
-block_sha3_512_digest = hashlib.sha3_512(plaintext_block_bytes).digest()
-block_sha3_512_hex = block_sha3_512_digest.hex()
-ed25519_sig = self.sign_digest(block_sha3_512_hex)
-pqc_sig = PostQuantumLamportSigner.sign_digest(block_sha3_512_digest)
-# Encrypt in RAM before writing to device storage
-kdf_salt = os.urandom(16)
-if encryption_passphrase:
-key = self._derive_fernet_key(encryption_passphrase, kdf_salt)
-cipher = Fernet(key)
-bytes_to_write = cipher.encrypt(plaintext_block_bytes)
-block_filename = f"{bundle_id}.ijrap.enc"
-else:
-bytes_to_write = plaintext_block_bytes
-block_filename = f"{bundle_id}.ijrap"
-final_block_path = os.path.join(self.storage_dir, block_filename)
-with open(final_block_path, "wb") as bf:
-bf.write(bytes_to_write)
-bf.flush()
-# External OpenTimestamps anchoring
-ots_path = None
-if enable_opentimestamps:
-ots_path = self._request_opentimestamp(bundle_id, block_sha256)
-# Chained public certificate (replaces Unix os.chmod permissions)
-certificate = {
-"schema": "IJRAP-SANDBOX-CERT-v3",
-"bundle_id": bundle_id,
-"title": title,
-"timestamp_utc": sync_timestamp,
-"previous_chain_hash": previous_chain_hash,
-"monolithic_block_file": block_filename,
-"block_sha256": block_sha256,
-"sha3_512_digest": block_sha3_512_hex,
-"device_public_key_hex": self.public_key_hex,
-"ed25519_block_signature_hex": ed25519_sig,
-"post_quantum_signature": pqc_sig,
-"opentimestamps_proof": os.path.basename(ots_path) if ots_path else "pending_offline",
-"encryption": {
-"is_encrypted": bool(encryption_passphrase),
-"cipher": "Fernet-AES128-CBC-HMAC-SHA256" if encryption_passphrase else "none",
-"kdf_salt_hex": kdf_salt.hex() if encryption_passphrase else None,
-},
-}
-cert_path = os.path.join(self.storage_dir, f"{bundle_id}.json")
-with open(cert_path, "w", encoding="utf-8") as cf:
-json.dump(certificate, cf, indent=2, ensure_ascii=False)
-cf.flush()
-return certificate
+        ed25519_sig = self.sign_digest(block_sha3_512_hex)
+        pqc_sig = PostQuantumLamportSigner.sign_digest(block_sha3_512_digest)
 
-<FollowUp>
-Une fois le fichier enregistré sous le nom **`ijrap_seal.py`** (et l'ancien fichier `ijrap_public_sealer.py` supprimé de votre dépôt GitHub), souhaitez-vous que je vous aide à rédiger le fichier **`buildozer.spec`** pour compiler l'application Android ?
-</FollowUp>
+        # Encrypt in RAM before writing to device storage
+        kdf_salt = os.urandom(16)
+        if encryption_passphrase:
+            key = self._derive_fernet_key(encryption_passphrase, kdf_salt)
+            cipher = Fernet(key)
+            bytes_to_write = cipher.encrypt(plaintext_block_bytes)
+            block_filename = f"{bundle_id}.ijrap.enc"
+        else:
+            bytes_to_write = plaintext_block_bytes
+            block_filename = f"{bundle_id}.ijrap"
+
+        final_block_path = os.path.join(self.storage_dir, block_filename)
+        with open(final_block_path, "wb") as bf:
+            bf.write(bytes_to_write)
+            bf.flush()
+
+        # External OpenTimestamps anchoring
+        ots_path = None
+        if enable_opentimestamps:
+            ots_path = self._request_opentimestamp(bundle_id, block_sha256)
+
+        # Chained public certificate (replaces Unix os.chmod permissions)
+        certificate = {
+            "schema": "IJRAP-SANDBOX-CERT-v3",
+            "bundle_id": bundle_id,
+            "title": title,
+            "timestamp_utc": sync_timestamp,
+            "previous_chain_hash": previous_chain_hash,
+            "monolithic_block_file": block_filename,
+            "block_sha256": block_sha256,
+            "sha3_512_digest": block_sha3_512_hex,
+            "device_public_key_hex": self.public_key_hex,
+            "ed25519_block_signature_hex": ed25519_sig,
+            "post_quantum_signature": pqc_sig,
+            "opentimestamps_proof": os.path.basename(ots_path) if ots_path else "pending_offline",
+            "encryption": {
+                "is_encrypted": bool(encryption_passphrase),
+                "cipher": "Fernet-AES128-CBC-HMAC-SHA256" if encryption_passphrase else "none",
+                "kdf_salt_hex": kdf_salt.hex() if encryption_passphrase else None,
+            },
+        }
+
+        cert_path = os.path.join(self.storage_dir, f"{bundle_id}.json")
+        with open(cert_path, "w", encoding="utf-8") as cf:
+            json.dump(certificate, cf, indent=2, ensure_ascii=False)
+            cf.flush()
+
+        return certificate
+        
+        
