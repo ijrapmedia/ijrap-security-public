@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" id="html-tag">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IJRAP Media | Sécurité Forensique & Journalisme d'Investigation</title>
+    <title id="page-title">IJRAP Media | Sécurité Forensique &amp; Journalisme d'Investigation</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1f2937; margin: 0; padding: 0; background-color: #f3f4f6; }
-        header { background-color: #111827; color: #ffffff; padding: 45px 20px; text-align: center; }
+        header { position: relative; background-color: #111827; color: #ffffff; padding: 55px 20px 45px; text-align: center; }
         header h1 { margin: 0; font-size: 2.2em; letter-spacing: 1px; }
         header p { color: #d1d5db; font-size: 1.1em; max-width: 750px; margin: 12px auto 0; }
+        
+        /* Style du bouton de langue */
+        .lang-switch { position: absolute; top: 18px; right: 20px; display: flex; gap: 6px; }
+        .lang-btn { background: #1f2937; color: #d1d5db; border: 1px solid #374151; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85em; transition: all 0.2s; }
+        .lang-btn:hover { background: #374151; color: #ffffff; }
+        .lang-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; }
+
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
         .card { background: #ffffff; padding: 28px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 25px; }
         h2 { color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 0; }
@@ -20,55 +27,122 @@
         .btn-contact { display: inline-block; background-color: #2563eb; color: #ffffff; padding: 14px 26px; font-size: 1em; font-weight: bold; text-decoration: none; border-radius: 6px; margin-top: 12px; }
         .btn-contact:hover { background-color: #1d4ed8; }
         footer { text-align: center; padding: 25px; color: #6b7280; font-size: 0.9em; }
+
+        /* Gestion de l'affichage des langues */
+        .en { display: none; }
+        body.lang-en .fr { display: none; }
+        body.lang-en .en { display: inline; }
+        body.lang-en p.en, body.lang-en h2.en { display: block; }
     </style>
 </head>
 <body>
 
 <header>
+    <div class="lang-switch">
+        <button id="btn-fr" class="lang-btn active" onclick="setLanguage('fr')">🇫🇷 FR</button>
+        <button id="btn-en" class="lang-btn" onclick="setLanguage('en')">🇬🇧 EN</button>
+    </div>
+
     <h1>IJRAP Media &amp; IJRAP LABS</h1>
-    <p>Méthodologie scientifique, journalisme d'investigation et scellement cryptographique de preuves numériques non altérables.</p>
+    <p class="fr">Méthodologie scientifique, journalisme d'investigation et scellement cryptographique de preuves numériques non altérables.</p>
+    <p class="en">Scientific methodology, investigative journalism, and cryptographic sealing of tamper-proof digital evidence.</p>
 </header>
 
 <div class="container">
 
     <div class="card">
-        <h2>À propos de la structure &amp; du chercheur</h2>
-        <p>Fondée et dirigée par <strong>ADZE Kossivi Edem</strong> (Chercheur &amp; Artiste, Lomé - Togo), la structure <strong>IJRAP Media</strong> développe des outils logiciels de terrain permettant de recueillir, synchroniser et sceller des preuves numériques (audio, vidéo, photo, texte) pour la justice et la recherche scientifique.</p>
+        <h2 class="fr">À propos de la structure &amp; du chercheur</h2>
+        <h2 class="en">About the Organization &amp; Researcher</h2>
+        
+        <p class="fr">Fondée et dirigée par <strong>ADZE Kossivi Edem</strong> (Chercheur &amp; Artiste, Lomé - Togo), la structure <strong>IJRAP Media</strong> développe des outils logiciels de terrain permettant de recueillir, synchroniser et sceller des preuves numériques (audio, vidéo, photo, texte) pour la justice et la recherche scientifique.</p>
+        <p class="en">Founded and led by <strong>ADZE Kossivi Edem</strong> (Researcher &amp; Artist, Lomé - Togo), <strong>IJRAP Media</strong> develops field software tools to collect, synchronize, and seal digital evidence (audio, video, photo, text) for justice and scientific research.</p>
+        
         <div class="badges">
-            <a href="https://zenodo.org/record/23139273" target="_blank">📄 Publication Zenodo (DOI: 10.5281/zenodo.23139273)</a>
-            <a href="https://github.com/ijrapmedia/ijrap-security-public" target="_blank">💻 Code Source Open-Source (GitHub)</a>
-            <!-- REMPLACEZ LES LIENS CI-DESSOUS PAR VOS VRAIES ADRESSES ORCID ET WIKIMEDIA -->
-            <a href="https://orcid.org/0009-0009-0018-6734" target="_blank">🔬 Profil Chercheur ORCID</a>
-            <a href="https://commons.wikimedia.org/wiki/User:Komavo" target="_blank">🌐 Profil Wikimedia</a>
+            <a href="https://zenodo.org" target="_blank">
+                <span class="fr">📄 Publication Zenodo (DOI: 10.5281/zenodo.23139273)</span>
+                <span class="en">📄 Zenodo Publication (DOI: 10.5281/zenodo.23139273)</span>
+            </a>
+            <a href="https://github.com" target="_blank">
+                <span class="fr">💻 Code Source Open-Source (GitHub)</span>
+                <span class="en">💻 Open-Source Code (GitHub)</span>
+            </a>
+            <a href="https://orcid.org" target="_blank">
+                <span class="fr">🔬 Profil Chercheur ORCID</span>
+                <span class="en">🔬 ORCID Researcher Profile</span>
+            </a>
+            <a href="https://wikimedia.org" target="_blank">
+                <span class="fr">🌐 Profil Wikimedia</span>
+                <span class="en">🌐 Wikimedia Profile</span>
+            </a>
         </div>
     </div>
 
     <div class="card">
-        <h2>Soutenir IJRAP Media (Dons directs)</h2>
-        <p>Vos dons soutiennent directement l'innovation technologique, le maintien de la version citoyenne gratuite et le déploiement des outils de terrain au Togo et à l'international.</p>
+        <h2 class="fr">Soutenir IJRAP Media (Dons directs)</h2>
+        <h2 class="en">Support IJRAP Media (Direct Donations)</h2>
+        
+        <p class="fr">Vos dons soutiennent directement l'innovation technologique, le maintien de la version citoyenne gratuite et le déploiement des outils de terrain au Togo et à l'international.</p>
+        <p class="en">Your donations directly support technological innovation, the maintenance of the free citizen version, and the deployment of field tools in Togo and internationally.</p>
         
         <div class="donation-box">
-            <p><strong>1. Dons depuis le Togo &amp; l'Afrique de l'Ouest (Mobile Money) :</strong></p>
-            <p>• <strong>Mixx by Yas (TMoney) :</strong> <span class="highlight-num"> +228 70 32 46 25</span> (Bénéficiaire : ADZE Kossivi Edem)</p>
+            <p class="fr"><strong>1. Dons depuis le Togo &amp; l'Afrique de l'Ouest (Mobile Money) :</strong></p>
+            <p class="en"><strong>1. Donations from Togo &amp; West Africa (Mobile Money):</strong></p>
             
-            <p style="margin-top: 15px;"><strong>2. Dons depuis l'Europe, l'Amérique &amp; l'Asie (Transfert instantané vers Mobile Money) :</strong></p>
-            <p>Vous pouvez envoyer votre soutien par carte bancaire en 1 minute directement vers le portefeuille Mobile Money ci-dessus via <strong>Taptap Send</strong>, <strong>Western Union</strong>, <strong>WorldRemit</strong> ou <strong>Remitly</strong> (Pays : <strong>Togo</strong> | Bénéficiaire : <strong>ADZE Kossivi Edem</strong>).</p>
+            <p class="fr">• <strong>Mixx by Yas (TMoney) :</strong> <span class="highlight-num">+228 70 32 46 25</span> (Bénéficiaire : ADZE Kossivi Edem)</p>
+            <p class="en">• <strong>Mixx by Yas (TMoney):</strong> <span class="highlight-num">+228 70 32 46 25</span> (Beneficiary: ADZE Kossivi Edem)</p>
+            
+            <p class="fr" style="margin-top: 15px;"><strong>2. Dons depuis l'Europe, l'Amérique &amp; l'Asie (Transfert instantané vers Mobile Money) :</strong></p>
+            <p class="en" style="margin-top: 15px;"><strong>2. Donations from Europe, the Americas &amp; Asia (Instant Transfer to Mobile Money):</strong></p>
+            
+            <p class="fr">Vous pouvez envoyer votre soutien par carte bancaire en 1 minute directement vers le portefeuille Mobile Money ci-dessus via <strong>Taptap Send</strong>, <strong>Western Union</strong>, <strong>WorldRemit</strong> ou <strong>Remitly</strong> (Pays : <strong>Togo</strong> | Bénéficiaire : <strong>ADZE Kossivi Edem</strong>).</p>
+            <p class="en">You can send your support by bank card in 1 minute directly to the Mobile Money wallet above via <strong>Taptap Send</strong>, <strong>Western Union</strong>, <strong>WorldRemit</strong>, or <strong>Remitly</strong> (Country: <strong>Togo</strong> | Beneficiary: <strong>ADZE Kossivi Edem</strong>).</p>
         </div>
     </div>
 
     <div class="card">
-        <h2>Subventions, Universités &amp; Visioconférences</h2>
-        <p>Nous collaborons avec les universités, fondations, ONG et institutions pour des enseignements en ligne, des conférences et le financement de la recherche (virements bancaires institutionnels SWIFT sur compte <strong>Orabank</strong> avec convention officielle).</p>
-        <!-- REMPLACEZ PAR VOTRE ADRESSE E-MAIL -->
-        <a href="mailto: imoadze1@gmail.com ?subject=Subvention%20ou%20Conference%20IJRAP%20Media" class="btn-contact">✉️ Contacter ADZE Kossivi Edem (Subventions &amp; Conférences)</a>
+        <h2 class="fr">Subventions, Universités &amp; Visioconférences</h2>
+        <h2 class="en">Grants, Universities &amp; Video Conferences</h2>
+        
+        <p class="fr">Nous collaborons avec les universités, fondations, ONG et institutions pour des enseignements en ligne, des conférences et le financement de la recherche (virements bancaires institutionnels SWIFT sur compte <strong>Orabank</strong> avec convention officielle).</p>
+        <p class="en">We collaborate with universities, foundations, NGOs, and institutions for online lectures, conferences, and research funding (institutional SWIFT bank transfers to an <strong>Orabank</strong> account with an official agreement).</p>
+        
+        <a id="contact-link" href="mailto:imoadze1@://gmail.com" class="btn-contact">
+            <span class="fr">✉️ Contacter ADZE Kossivi Edem (Subventions &amp; Conférences)</span>
+            <span class="en">✉️ Contact ADZE Kossivi Edem (Grants &amp; Conferences)</span>
+        </a>
     </div>
 
 </div>
 
 <footer>
-    &copy; 2026 IJRAP Media / IJRAP LABS — Propriété de ADZE Kossivi Edem. Tous droits réservés.
+    <span class="fr">&copy; 2026 IJRAP Media / IJRAP LABS — Propriété de ADZE Kossivi Edem. Tous droits réservés.</span>
+    <span class="en">&copy; 2026 IJRAP Media / IJRAP LABS — Property of ADZE Kossivi Edem. All rights reserved.</span>
 </footer>
 
-</body>
-      </html>
-                                                         
+<script>
+    function setLanguage(lang) {
+        const body = document.body;
+        const htmlTag = document.getElementById('html-tag');
+        const pageTitle = document.getElementById('page-title');
+        const contactLink = document.getElementById('contact-link');
+        const btnFr = document.getElementById('btn-fr');
+        const btnEn = document.getElementById('btn-en');
+
+        if (lang === 'en') {
+            body.classList.add('lang-en');
+            htmlTag.setAttribute('lang', 'en');
+            pageTitle.textContent = 'IJRAP Media | Forensic Security & Investigative Journalism';
+            contactLink.href = 'mailto:imoadze1@://gmail.com';
+            btnEn.classList.add('active');
+            btnFr.classList.remove('active');
+        } else {
+            body.classList.remove('lang-en');
+            htmlTag.setAttribute('lang', 'fr');
+            pageTitle.textContent = "IJRAP Media | Sécurité Forensique & Journalisme d'Investigation";
+            contactLink.href = 'mailto:imoadze1@://gmail.com';
+            btnFr.classList.add('active');
+            btnEn.classList.remove('active');
+        }
+    }
+</script>
+
