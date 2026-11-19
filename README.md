@@ -21,6 +21,14 @@ Our strategic focus is on independent journalists, citizen reporters, whistleblo
 - **Anti-Seizure Encryption & Panic Wipe (Tella-Inspired):** Encrypts the entire `.ijrap` container in RAM prior to storage (`.ijrap.enc` using PBKDF2-HMAC-SHA256 + Fernet) so no unencrypted media ever touches flash memory, complemented by an emergency `panic_wipe()` function to destroy the local signing key.
 - **Decentralized Timestamping (OpenTimestamps):** Anchors the 32-byte SHA-256 digest of the monolithic block onto the Bitcoin blockchain via OpenTimestamps (`.ijrap.ots`) when online, while remaining 100% non-blocking in offline field environments (`pending_offline`).
 
+## Strict "Zero-Gallery" Policy & Volatile Memory (RAM) Capture
+
+Unlike consumer-grade media verification tools that allow users to import pre-existing files from a device's local gallery, **IJRAP Security enforces a strict Zero-Gallery, Live-Capture-Only architecture**:
+
+* **Prevention of Pre-Capture Tampering:** Access to the device's public gallery and external file picker is completely blocked at the application level. All audiovisual streams (photo, video, audio) and written field notes must be captured live through hardware sensors at the exact moment of investigation.
+* **In-Memory Forensic Sealing (RAM-Only):** Captured media buffers, consent metadata, and cryptographic signatures (Ed25519, Lamport PQC, C2PA Content Credentials) are assembled, hashed, and encrypted strictly in volatile memory (RAM) via `ijrap_seal.py` and `c2pa_bridge.py`.
+* **Zero Plaintext Disk Footprint:** Unsealed or unencrypted media is never written to the device's flash storage, eliminating the risk of file substitution, synthetic media injection (deepfakes), or unauthorized local tampering prior to sealing.
+  
 ## Prerequisites
 
 - **Python 3.10 or higher** must be installed on your machine (verify with `python --version`).
