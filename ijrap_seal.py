@@ -314,3 +314,41 @@ class IJRAPForensicSealer:
         return certificate
         
         
+# --- EXTENSION OPTIONNELLE C2PA CONTENT CREDENTIALS ---
+try:
+    from c2pa_bridge import IJRAPC2PABridge
+    C2PA_AVAILABLE = True
+except ImportError:
+    IJRAPC2PABridge = None
+    C2PA_AVAILABLE = False
+
+
+def attach_optional_c2pa_seal(
+    media_bytes: bytes,
+    mime_type: str,
+    title: str,
+    investigator_id: str,
+    bundle_id: str,
+    sha3_512_digest: str,
+    cert_pem: bytes | None = None,
+    key_pem: bytes | None = None,
+    gps_coords: tuple[float, float] | None = None,
+) -> bytes:
+    """
+    Signe un média en mémoire vive (RAM) avec C2PA si activé et configuré.
+    Retourne le média d'origine intact si C2PA est désactivé ou absent (zéro risque de crash).
+    """
+    if not C2PA_AVAILABLE or not cert_pem or not key_pem:
+        return media_bytes
+
+    bridge = IJRAPC2PABridge(cert_pem=cert_pem, key_pem=key_pem)
+    return bridge.sign_stream_in_memory(
+        media_bytes=media_bytes,
+        mime_type=mime_type,
+        title=title,
+        investigator_id=investigator_id,
+        bundle_id=bundle_id,
+        sha3_512_digest=sha3_512_digest,
+        gps_coords=gps_coords,
+    )
+        
